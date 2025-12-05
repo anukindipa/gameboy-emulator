@@ -20,7 +20,7 @@ class Registers():
         self.SP = 0
         # program counter
         self.PC = 0
-    
+
     # the AF, BC, DE, HL registers are 16 bit registers
     # where the two 8-bit registers A and F are treated as a single register
     # @property allows treating AF like an attribute
