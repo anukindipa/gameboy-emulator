@@ -41,7 +41,8 @@ class Registers():
     def HL(self):
         return (self.H << 8) | self.L
     
-    def set_AF(self, val):
+    @AF.setter
+    def AF(self, val):
         """
         takes a 16-bit value `val` 
         and assigns first 8 bits to register A
@@ -50,13 +51,17 @@ class Registers():
         self.A = (val & 0xFF00) >> 8
         self.F = val & 0xFF
 
-    def set_BC(self, val):
+    @BC.setter
+    def BC(self, val):
         self.B = (val & 0xFF00) >> 8
         self.C = val & 0xFF
-    def set_DE(self, val):
+
+    @DE.setter
+    def DE(self, val):
         self.D = (val & 0xFF00) >> 8
         self.E = val & 0xFF
-    def set_HL(self, val):
+
+    @HL.setter
+    def HL(self, val):
         self.H = (val & 0xFF00) >> 8
         self.L = val & 0xFF
-        
