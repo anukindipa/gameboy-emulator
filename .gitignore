@@ -1,2 +1,5 @@
 # vscode folder
 .vscode/
+
+# pycache folders
+*/__pycache--/
