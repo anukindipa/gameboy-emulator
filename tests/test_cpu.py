@@ -1,5 +1,5 @@
 import pytest
-from gb.cpu.registers import Registers
+from gb.cpu.registers import Registers, InvalidFlagValue
 
 
 @pytest.fixture
@@ -92,3 +92,47 @@ def test_PC_SP(registers):
     assert getattr(registers, "SP") == 0
     registers.SP += 1
     assert getattr(registers, "SP") == 1
+
+
+def test_flag_set(registers):
+    registers.set_z_flag(1)
+    assert registers.F == 0x80
+    registers.set_n_flag(1)
+    assert registers.F == 0xC0
+    registers.F = 0x0
+    registers.set_h_flag(1)
+    assert registers.F == 0x20
+    registers.F = 0x0
+    registers.set_c_flag(1)
+    assert registers.F == 0x10
+    
+    registers.F = 0xF0
+    # set all to 0
+    registers.set_z_flag(0)
+    registers.set_n_flag(0)
+    registers.set_h_flag(0)
+    registers.set_c_flag(0)
+    assert registers.F == 0x0
+
+    # try setting invalid values
+    with pytest.raises(InvalidFlagValue):
+        registers.set_z_flag(2)
+    with pytest.raises(InvalidFlagValue):
+        registers.set_n_flag(-1)
+    with pytest.raises(InvalidFlagValue):
+        registers.set_h_flag("hi")
+    with pytest.raises(InvalidFlagValue):
+        registers.set_c_flag(registers)
+    
+def test_flag_get(registers):
+    registers.F = 0xF0
+    assert registers.get_z_flag() == 1
+    assert registers.get_n_flag() == 1
+    assert registers.get_h_flag() == 1
+    assert registers.get_c_flag() == 1
+    
+    registers.F = 0xA0
+    assert registers.get_z_flag() == 1
+    assert registers.get_n_flag() == 0
+    assert registers.get_h_flag() == 1
+    assert registers.get_c_flag() == 0
