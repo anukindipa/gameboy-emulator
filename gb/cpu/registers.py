@@ -9,6 +9,12 @@ class Registers():
     PC and SP are 16-bit
     AF, BC, DE, HL are 'virtual registers'
     """
+    __slots__ = (
+    "A", "B", "C", "D", "E", "F", "H", "L",
+    "SP", "PC",
+    "Z_FLAG", "N_FLAG", "H_FLAG", "C_FLAG",
+)
+
     # setup the registers
     def __init__(self):
         self.A = 0
@@ -59,17 +65,14 @@ class Registers():
         """
         self.A = (val & 0xFF00) >> 8
         self.F = val & 0xFF
-
     @BC.setter
     def BC(self, val):
         self.B = (val & 0xFF00) >> 8
         self.C = val & 0xFF
-
     @DE.setter
     def DE(self, val):
         self.D = (val & 0xFF00) >> 8
         self.E = val & 0xFF
-
     @HL.setter
     def HL(self, val):
         self.H = (val & 0xFF00) >> 8
@@ -93,21 +96,29 @@ class Registers():
             self.F = self.F & (0xFF - flag)
     
     # getting flag values
-    def get_z_flag(self):
+    @property
+    def z_flag(self):
         return self._get_flag(self.Z_FLAG)
-    def get_n_flag(self):
+    @property
+    def n_flag(self):
         return self._get_flag(self.N_FLAG)
-    def get_h_flag(self):
+    @property
+    def h_flag(self):
         return self._get_flag(self.H_FLAG)
-    def get_c_flag(self):
+    @property
+    def c_flag(self):
         return self._get_flag(self.C_FLAG)
             
     # setting flag values
-    def set_z_flag(self, value):
+    @z_flag.setter
+    def z_flag(self, value):
         self._set_flag(self.Z_FLAG, value)
-    def set_n_flag(self, value):
+    @n_flag.setter
+    def n_flag(self, value):
         self._set_flag(self.N_FLAG, value)
-    def set_h_flag(self, value):
+    @h_flag.setter
+    def h_flag(self, value):
         self._set_flag(self.H_FLAG, value)
-    def set_c_flag(self, value):
+    @c_flag.setter
+    def c_flag(self, value):
         self._set_flag(self.C_FLAG, value)
