@@ -20,12 +20,6 @@ def LD_r8_d8(cpu, r_name):
     d8 = cpu.read_d8()
     setattr(cpu.registers, r_name, d8)
 
-
-
-
-
-
-
 def INC_r16(cpu, r_name):
     """16 bit register increments are not handled by the ALU.
     There is a seperate 16bit adder inside the sharp SM83,
@@ -46,7 +40,7 @@ def INC_r8(cpu, r_name):
 
 def DEC_r8(cpu, r_name):
     val = getattr(cpu.registers, r_name)
-    val = (val-1) % 0xff
+    val = (val-1) % 0x100
     setattr(cpu.registers, r_name, val)
     cpu.registers.z_flag = int(val==0)
     cpu.registers.n_flag = 1
@@ -54,15 +48,39 @@ def DEC_r8(cpu, r_name):
 
 def DEC_r16(cpu, r_name):
     val = getattr(cpu.registers, r_name)
-    val = (val-1) % 0xffff 
+    val = (val-1) % 0x10000 
     setattr(cpu.registers, r_name, val)
 
+def ADD_A_r8(cpu, r_name):
+    r = getattr(cpu.registers, r_name)
+    a = cpu.registers.A
+    res = a + r
+
+    cpu.registers.z_flag = int((res & 0xff) == 0)
+    cpu.registers.n_flag = 0
+    cpu.registers.h_flag = int(a + r > 0xf)
+    cpu.registers.c_flag = int(res > 0xff)
+
+    cpu.registers.A = res & 0xff
+
+def SUB_A_r8(cpu, r_name):
+    r = getattr(cpu.registers, r_name)
+    a = cpu.registers.A
+    res = a - r
+
+    # %0x100 is used just in case
+    cpu.registers.z_flag = int((res%0x100) == 0)
+    cpu.registers.n_flag = 1
+    cpu.registers.h_flag = int(r%0x10 > a%0x10)
+    cpu.registers.c_flag = int(r > a)
+
+    cpu.registers.A = res % 0x100
 
 class OP_Handler():
     __slots__ = ["code_arr", "cb_code_arr"]
     
     def __init__(self):
-        self.code_arr = [None] * 256
+        self.code_arr: list = [None] * 256
 
         # 0x00..0x0f
         self.code_arr[0x00] = NOP
@@ -187,6 +205,28 @@ class OP_Handler():
         self.code_arr[0x7d] = lambda cpu: LD_r8_r8(cpu, "A", "L")
         #
         self.code_arr[0x7f] = lambda cpu: LD_r8_r8(cpu, "A", "A")
+        
+        # 0x80..0x8f 
+        self.code_arr[0x80] = lambda cpu: ADD_A_r8(cpu, "B")
+        self.code_arr[0x81] = lambda cpu: ADD_A_r8(cpu, "C")
+        self.code_arr[0x82] = lambda cpu: ADD_A_r8(cpu, "D")
+        self.code_arr[0x83] = lambda cpu: ADD_A_r8(cpu, "E")
+        self.code_arr[0x84] = lambda cpu: ADD_A_r8(cpu, "H")
+        self.code_arr[0x85] = lambda cpu: ADD_A_r8(cpu, "L")
+        #
+        self.code_arr[0x87] = lambda cpu: ADD_A_r8(cpu, "A")
+        #
+        #
+
+        # 0x80..0x8f 
+        self.code_arr[0x90] = lambda cpu: SUB_A_r8(cpu, "B")
+        self.code_arr[0x91] = lambda cpu: SUB_A_r8(cpu, "C")
+        self.code_arr[0x92] = lambda cpu: SUB_A_r8(cpu, "D")
+        self.code_arr[0x93] = lambda cpu: SUB_A_r8(cpu, "E")
+        self.code_arr[0x94] = lambda cpu: SUB_A_r8(cpu, "H")
+        self.code_arr[0x95] = lambda cpu: SUB_A_r8(cpu, "L")
+        #
+        self.code_arr[0x97] = lambda cpu: SUB_A_r8(cpu, "A")
 
     def run_code(self, cpu, code_num):
         fn = self.code_arr[code_num]

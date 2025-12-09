@@ -1,8 +1,10 @@
 from registers import Registers
+from gb.mmu import MMU
 
 class CPU():
     def __init__(self):
         self.reg = Registers()
+        self.memory = MMU()
         
     def fetch(self):
         pass
