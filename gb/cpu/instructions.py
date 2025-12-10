@@ -1,9 +1,16 @@
-"""
-r8 is a normal register like A, B
-r16 is a 'pair' register like DE, HL
-
-d16 is a 16 bit value
-"""
+################################################################################
+# Handles instruction of the sharp SM83 CPU
+################################################################################
+# behavior reference:
+#   https://gbdev.io/pandocs/CPU_Instruction_Set.html
+#   https://rgbds.gbdev.io/docs/v1.0.0/gbz80.7#POP_r16
+# optable:
+#   https://gbdev.io/gb-opcodes/optables/
+################################################################################
+# r8 is a normal register like A, B
+# r16 is a 'pair' register like DE, HL
+# d16 is a 16 bit value
+################################################################################
 
 def NOP(cpu):
     pass
@@ -354,7 +361,8 @@ class OP_Handler():
     def run_code(self, cpu, code_num):
         fn = self.code_arr[code_num]
         if fn==None:
-            raise NotImplementedError(f"opcode {code_num} is not implemented")
+            raise NotImplementedError(f"opcode {code_num} is not implemented.\n\
+                    Program Counter at: {cpu.registers.PC-1:04x}")
         fn(cpu)
 
     def run_cb_code(self, cpu, code_num):
