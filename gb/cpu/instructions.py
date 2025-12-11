@@ -36,19 +36,33 @@ def INC_r16(cpu, r_name):
     val = (val+1) & 0xffff 
     setattr(cpu.registers, r_name, val)
 
-def INC_r8(cpu, r_name):
-    val = getattr(cpu.registers, r_name)
-    val = (val+1) & 0xff 
-    setattr(cpu.registers, r_name, val)
+def INC_r8(cpu, r_name, HL=False):
+    if HL:
+        # TODO: check if behavior is correct
+        addr = cpu.registers.HL
+        val = cpu.read_d8(addr)
+        val = (val+1) & 0xff
+        cpu.write_d8(addr, val)
+    else:
+        val = getattr(cpu.registers, r_name)
+        val = (val+1) & 0xff 
+        setattr(cpu.registers, r_name, val)
     cpu.registers.z_flag = int(val==0)
     cpu.registers.n_flag = 0
     # fine for inc but h_flag must be calculated differently for other ops
     cpu.registers.h_flag = int(val&0xf == 0)
 
-def DEC_r8(cpu, r_name):
-    val = getattr(cpu.registers, r_name)
-    val = (val-1) % 0x100
-    setattr(cpu.registers, r_name, val)
+def DEC_r8(cpu, r_name, HL=False):
+    if HL:
+        # TODO: check if behavior is correct
+        addr = cpu.registers.HL
+        val = cpu.read_d8(addr)
+        val = (val-1) % 0x100
+        cpu.write_d8(addr, val)
+    else:
+        val = getattr(cpu.registers, r_name)
+        val = (val-1) % 0x100
+        setattr(cpu.registers, r_name, val)
     cpu.registers.z_flag = int(val==0)
     cpu.registers.n_flag = 1
     cpu.registers.h_flag = int(val&0xf == 0xf)
@@ -58,8 +72,11 @@ def DEC_r16(cpu, r_name):
     val = (val-1) % 0x10000 
     setattr(cpu.registers, r_name, val)
 
-def ADD_A_r8(cpu, r_name):
-    r = getattr(cpu.registers, r_name)
+def ADD_A_r8(cpu, r_name, HL=False):
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
     res = a + r
 
@@ -70,8 +87,11 @@ def ADD_A_r8(cpu, r_name):
 
     cpu.registers.A = res & 0xff
 
-def ADC_A_r8(cpu, r_name):
-    r = getattr(cpu.registers, r_name)
+def ADC_A_r8(cpu, r_name, HL=False):
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
     c = cpu.registers.c_flag
     res = a + r + c
@@ -83,8 +103,11 @@ def ADC_A_r8(cpu, r_name):
 
     cpu.registers.A = res & 0xff
 
-def SUB_A_r8(cpu, r_name):
-    r = getattr(cpu.registers, r_name)
+def SUB_A_r8(cpu, r_name, HL=False):
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
     res = a - r
 
@@ -96,8 +119,11 @@ def SUB_A_r8(cpu, r_name):
 
     cpu.registers.A = res % 0x100
 
-def SBC_A_r8(cpu, r_name):
-    r = getattr(cpu.registers, r_name)
+def SBC_A_r8(cpu, r_name, HL=False):
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
     c = cpu.registers.c_flag
     res = a - (r + c)
@@ -120,8 +146,11 @@ def AND_A_r8(cpu, r_name):
     cpu.registers.h_flag = 1
     cpu.registers.c_flag = 0
 
-def OR_A_r8(cpu, r_name):
-    r = getattr(cpu.registers, r_name)
+def OR_A_r8(cpu, r_name, HL=False):
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
     res = a | r
 
@@ -131,8 +160,11 @@ def OR_A_r8(cpu, r_name):
     cpu.registers.h_flag = 0
     cpu.registers.c_flag = 0
 
-def XOR_A_r8(cpu, r_name):
-    r = getattr(cpu.registers, r_name)
+def XOR_A_r8(cpu, r_name, HL=False):
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
     res = a ^ r
 
@@ -142,12 +174,15 @@ def XOR_A_r8(cpu, r_name):
     cpu.registers.h_flag = 0
     cpu.registers.c_flag = 0
 
-def CP_A_r8(cpu, r_name):
+def CP_A_r8(cpu, r_name, HL=False):
     """
     compare (not copy) r8 to A. Done by subtracting r8 from A and setting flags.
     result is discarded
     """
-    r = getattr(cpu.registers, r_name)
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
     res = a - r
 
@@ -212,6 +247,8 @@ class OP_Handler():
         self.code_arr[0x31] = lambda cpu: LD_r16_d16(cpu, "SP")
         # 
         self.code_arr[0x33] = lambda cpu: INC_r16(cpu, "SP")
+        self.code_arr[0x34] = lambda cpu: INC_r8(cpu, None, HL=True)
+        self.code_arr[0x35] = lambda cpu: DEC_r8(cpu, None, HL=True)
         #
         #
         self.code_arr[0x3b] = lambda cpu: DEC_r16(cpu, "SP")
@@ -293,7 +330,7 @@ class OP_Handler():
         self.code_arr[0x83] = lambda cpu: ADD_A_r8(cpu, "E")
         self.code_arr[0x84] = lambda cpu: ADD_A_r8(cpu, "H")
         self.code_arr[0x85] = lambda cpu: ADD_A_r8(cpu, "L")
-        #
+        self.code_arr[0x86] = lambda cpu: ADD_A_r8(cpu, None, HL=True)
         self.code_arr[0x87] = lambda cpu: ADD_A_r8(cpu, "A")
         self.code_arr[0x88] = lambda cpu: ADC_A_r8(cpu, "B")
         self.code_arr[0x89] = lambda cpu: ADC_A_r8(cpu, "C")
@@ -301,7 +338,7 @@ class OP_Handler():
         self.code_arr[0x8b] = lambda cpu: ADC_A_r8(cpu, "E")
         self.code_arr[0x8c] = lambda cpu: ADC_A_r8(cpu, "H")
         self.code_arr[0x8d] = lambda cpu: ADC_A_r8(cpu, "L")
-        #
+        self.code_arr[0x8e] = lambda cpu: ADC_A_r8(cpu, None, HL=True)
         self.code_arr[0x8f] = lambda cpu: ADC_A_r8(cpu, "A")
         
         # 0x90..0x9f 
@@ -311,7 +348,7 @@ class OP_Handler():
         self.code_arr[0x93] = lambda cpu: SUB_A_r8(cpu, "E")
         self.code_arr[0x94] = lambda cpu: SUB_A_r8(cpu, "H")
         self.code_arr[0x95] = lambda cpu: SUB_A_r8(cpu, "L")
-        #
+        self.code_arr[0x96] = lambda cpu: SUB_A_r8(cpu, None, HL=True)
         self.code_arr[0x97] = lambda cpu: SUB_A_r8(cpu, "A")
         self.code_arr[0x98] = lambda cpu: SBC_A_r8(cpu, "B")
         self.code_arr[0x99] = lambda cpu: SBC_A_r8(cpu, "C")
@@ -319,7 +356,7 @@ class OP_Handler():
         self.code_arr[0x9b] = lambda cpu: SBC_A_r8(cpu, "E")
         self.code_arr[0x9c] = lambda cpu: SBC_A_r8(cpu, "H")
         self.code_arr[0x9d] = lambda cpu: SBC_A_r8(cpu, "L")
-        #
+        self.code_arr[0x9d] = lambda cpu: SBC_A_r8(cpu, None, HL=True)
         self.code_arr[0x9f] = lambda cpu: SBC_A_r8(cpu, "A")
 
         # 0xa0..0xaf 
@@ -329,7 +366,7 @@ class OP_Handler():
         self.code_arr[0xa3] = lambda cpu: AND_A_r8(cpu, "E")
         self.code_arr[0xa4] = lambda cpu: AND_A_r8(cpu, "H")
         self.code_arr[0xa5] = lambda cpu: AND_A_r8(cpu, "L")
-        #
+        self.code_arr[0xa6] = lambda cpu: AND_A_r8(cpu, None, HL=True)
         self.code_arr[0xa7] = lambda cpu: AND_A_r8(cpu, "A")
         self.code_arr[0xa8] = lambda cpu: XOR_A_r8(cpu, "B")
         self.code_arr[0xa9] = lambda cpu: XOR_A_r8(cpu, "C")
@@ -337,7 +374,7 @@ class OP_Handler():
         self.code_arr[0xab] = lambda cpu: XOR_A_r8(cpu, "E")
         self.code_arr[0xac] = lambda cpu: XOR_A_r8(cpu, "H")
         self.code_arr[0xad] = lambda cpu: XOR_A_r8(cpu, "L")
-        #
+        self.code_arr[0xae] = lambda cpu: XOR_A_r8(cpu, None, HL=True)
         self.code_arr[0xaf] = lambda cpu: XOR_A_r8(cpu, "A")
 
         # 0xb0..0xbf 
@@ -347,7 +384,7 @@ class OP_Handler():
         self.code_arr[0xb3] = lambda cpu: OR_A_r8(cpu, "E")
         self.code_arr[0xb4] = lambda cpu: OR_A_r8(cpu, "H")
         self.code_arr[0xb5] = lambda cpu: OR_A_r8(cpu, "L")
-        #
+        self.code_arr[0xb6] = lambda cpu: OR_A_r8(cpu, None, HL=True)
         self.code_arr[0xb7] = lambda cpu: OR_A_r8(cpu, "A")
         self.code_arr[0xb8] = lambda cpu: CP_A_r8(cpu, "B")
         self.code_arr[0xb9] = lambda cpu: CP_A_r8(cpu, "C")
@@ -355,7 +392,7 @@ class OP_Handler():
         self.code_arr[0xbb] = lambda cpu: CP_A_r8(cpu, "E")
         self.code_arr[0xbc] = lambda cpu: CP_A_r8(cpu, "H")
         self.code_arr[0xbd] = lambda cpu: CP_A_r8(cpu, "L")
-        #
+        self.code_arr[0xbe] = lambda cpu: CP_A_r8(cpu, None, HL=True)
         self.code_arr[0xbf] = lambda cpu: CP_A_r8(cpu, "A")
 
     def run_code(self, cpu, code_num):

@@ -42,3 +42,6 @@ class CPU():
 
     def read_d16(self, address=None):
         pass
+
+    def write_d8(self, address=None):
+        pass
