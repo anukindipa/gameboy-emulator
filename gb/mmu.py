@@ -20,11 +20,29 @@ class MMU():
     def __init__(self, mbc):
         # Cartridge MBC (Memory Bank Controller)
         # Handles bytes from 0x0000 to 0x7FFF and 0xA000 to 0xBFFF
-        # TODO: decide who gets VRAM mmu or mbc
+        # (ROM and External RAM)
         self.mbc = mbc
-        
+
+        # TODO: decide who gets VRAM mmu or mbc
         # Vram: 8KB
         self.vram = bytearray(0x2000)
+        
+        # Work RAM: 8KB
+        self.wram = bytearray(0x2000)
+        
+        # I'll not implement Echo RAM for now, as its useless
+
+        # OAM: 160 bytes
+        self.oam = bytearray(0xA0)
+
+        # IO Registers: 128 bytes
+        self.io_regs = bytearray(0x80)
+
+        # High RAM: 127 bytes
+        self.hram = bytearray(0x7F)
+
+        # interrupt enable register
+        self.interrupt_enable = 0x00
         
         # boot Rom setup
         try:
@@ -48,8 +66,12 @@ class MMU():
     def write_byte(self, address, value):
         pass
 
+# for testing functionality
 if __name__ == "__main__":
-    # print content of boot rom
-    mmu = MMU()
-    for byte in mmu.boot_rom:
-       print(f"{byte:02x}", end=" ")
+    def read_boot_rom():
+        # print content of boot rom
+        mmu = MMU()
+        for byte in mmu.boot_rom:
+           print(f"{byte:02x}", end=" ")
+    
+    read_boot_rom()

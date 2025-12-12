@@ -12,8 +12,18 @@
 # d16 is a 16 bit value
 ################################################################################
 
+
+################################################################################
+# Misc instructions
+################################################################################
+
 def NOP(cpu):
     pass
+
+
+################################################################################
+# Load instructions
+################################################################################
 
 def LD_r16_d16(cpu, r_name):
     d16 = cpu.read_d16()
@@ -27,6 +37,12 @@ def LD_r8_d8(cpu, r_name):
     d8 = cpu.read_d8()
     setattr(cpu.registers, r_name, d8)
 
+
+################################################################################
+# 16 bit arithmetic instructions
+#  - INC, DEC, ADD
+################################################################################
+
 def INC_r16(cpu, r_name):
     """16 bit register increments are not handled by the ALU.
     There is a seperate 16bit adder inside the sharp SM83,
@@ -35,6 +51,36 @@ def INC_r16(cpu, r_name):
     # wrap around
     val = (val+1) & 0xffff 
     setattr(cpu.registers, r_name, val)
+
+def DEC_r16(cpu, r_name):
+    val = getattr(cpu.registers, r_name)
+    val = (val-1) % 0x10000 
+    setattr(cpu.registers, r_name, val)
+
+def ADD_HL_r16(cpu, r_name):
+    # TODO: implement
+    pass
+
+
+################################################################################
+# 8 bit arithmetic instructions
+#   - ADD, ADC, SUB, SBC, AND, OR, XOR, CP
+################################################################################
+
+def ADD_A_r8(cpu, r_name, HL=False):
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
+    a = cpu.registers.A
+    res = a + r
+
+    cpu.registers.z_flag = int((res & 0xff) == 0)
+    cpu.registers.n_flag = 0
+    cpu.registers.h_flag = int(a + r > 0xf)
+    cpu.registers.c_flag = int(res > 0xff)
+
+    cpu.registers.A = res & 0xff
 
 def INC_r8(cpu, r_name, HL=False):
     if HL:
@@ -66,26 +112,6 @@ def DEC_r8(cpu, r_name, HL=False):
     cpu.registers.z_flag = int(val==0)
     cpu.registers.n_flag = 1
     cpu.registers.h_flag = int(val&0xf == 0xf)
-
-def DEC_r16(cpu, r_name):
-    val = getattr(cpu.registers, r_name)
-    val = (val-1) % 0x10000 
-    setattr(cpu.registers, r_name, val)
-
-def ADD_A_r8(cpu, r_name, HL=False):
-    if HL:
-        r = cpu.read_d8(cpu.registers.HL)
-    else:
-        r = getattr(cpu.registers, r_name)
-    a = cpu.registers.A
-    res = a + r
-
-    cpu.registers.z_flag = int((res & 0xff) == 0)
-    cpu.registers.n_flag = 0
-    cpu.registers.h_flag = int(a + r > 0xf)
-    cpu.registers.c_flag = int(res > 0xff)
-
-    cpu.registers.A = res & 0xff
 
 def ADC_A_r8(cpu, r_name, HL=False):
     if HL:
@@ -135,8 +161,35 @@ def SBC_A_r8(cpu, r_name, HL=False):
 
     cpu.registers.A = res % 0x100
 
-def AND_A_r8(cpu, r_name):
-    r = getattr(cpu.registers, r_name)
+def CP_A_r8(cpu, r_name, HL=False):
+    """
+    compare (not copy) r8 to A. Done by subtracting r8 from A and setting flags.
+    result is discarded
+    """
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
+    a = cpu.registers.A
+    res = a - r
+
+    cpu.registers.z_flag = int((res%0x100) == 0)
+    cpu.registers.n_flag = 1
+    cpu.registers.h_flag = int((r%0x10) > (a%0x10))
+    cpu.registers.c_flag = int(r > a)
+
+
+################################################################################
+# Bitwise logic instructions
+#    - AND, OR, XOR
+################################################################################
+
+def AND_A_r8(cpu, r_name, HL=False):
+    if HL:
+        r = cpu.read_d8(cpu.registers.HL)
+    else:
+        r = getattr(cpu.registers, r_name)
+
     a = cpu.registers.A
     res = a & r
 
@@ -174,22 +227,10 @@ def XOR_A_r8(cpu, r_name, HL=False):
     cpu.registers.h_flag = 0
     cpu.registers.c_flag = 0
 
-def CP_A_r8(cpu, r_name, HL=False):
-    """
-    compare (not copy) r8 to A. Done by subtracting r8 from A and setting flags.
-    result is discarded
-    """
-    if HL:
-        r = cpu.read_d8(cpu.registers.HL)
-    else:
-        r = getattr(cpu.registers, r_name)
-    a = cpu.registers.A
-    res = a - r
 
-    cpu.registers.z_flag = int((res%0x100) == 0)
-    cpu.registers.n_flag = 1
-    cpu.registers.h_flag = int((r%0x10) > (a%0x10))
-    cpu.registers.c_flag = int(r > a)
+################################################################################
+# code handler
+################################################################################
 
 class OP_Handler():
     __slots__ = ["code_arr", "cb_code_arr"]
@@ -356,7 +397,7 @@ class OP_Handler():
         self.code_arr[0x9b] = lambda cpu: SBC_A_r8(cpu, "E")
         self.code_arr[0x9c] = lambda cpu: SBC_A_r8(cpu, "H")
         self.code_arr[0x9d] = lambda cpu: SBC_A_r8(cpu, "L")
-        self.code_arr[0x9d] = lambda cpu: SBC_A_r8(cpu, None, HL=True)
+        self.code_arr[0x9e] = lambda cpu: SBC_A_r8(cpu, None, HL=True)
         self.code_arr[0x9f] = lambda cpu: SBC_A_r8(cpu, "A")
 
         # 0xa0..0xaf 
@@ -407,3 +448,12 @@ class OP_Handler():
         if fn==None:
             raise NotImplementedError(f"opcode 0xCB, {code_num} is not implemented")
         fn(cpu)
+
+    def execute_opcode(self, cpu, opcode):
+        if opcode is None:
+            raise ValueError("opcode is None")
+        if opcode==0xcb:
+            cb_opcode = cpu.read_d8()
+            self.run_cb_code(cpu, cb_opcode)
+        else:
+            self.run_code(cpu, opcode)
