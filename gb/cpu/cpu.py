@@ -40,7 +40,17 @@ class CPU():
         return self.memory.read_byte(address)
 
     def read_d16(self, address=None):
-        pass
+        # TODO: check if read_d16 is every called with addread not None
+        if address is None:
+            lsb = self.read_d8()
+            msb = self.read_d8()
+            return (msb << 8) | lsb
+        else:
+            ValueError("read_d16 with address not None not implemented yet")
 
-    def write_d8(self, address=None):
-        pass
+
+
+    def write_d8(self, address=None, value=0):
+        if address is None:
+            address = self.registers.PC
+        self.memory.write_byte(address, value) 
