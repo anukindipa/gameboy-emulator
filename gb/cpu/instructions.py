@@ -25,18 +25,123 @@ def NOP(cpu):
 # Load instructions
 ################################################################################
 
+# Load 16 bit value pointed by the next two bytes of PC into r16
 def LD_r16_d16(cpu, r_name):
     d16 = cpu.read_d16()
     setattr(cpu.registers, r_name, d16)
     
+# Copy the value in register r2 into register r1.
 def LD_r8_r8(cpu, r1_name, r2_name):
     val = getattr(cpu.registers, r2_name)
     setattr(cpu.registers, r1_name, val)
     
+# Load 8 bit value pointed by PC into r8
 def LD_r8_d8(cpu, r_name):
     d8 = cpu.read_d8()
     setattr(cpu.registers, r_name, d8)
+    
+# Copy the byte pointed to by `rname` of type r16 into register r8.
+# ex: 0x0a - LD A, [BC]
+def LD_r8_m8(cpu, r_name, m8_name):
+    address = getattr(cpu.registers, m8_name)
+    val = cpu.read_d8(address)
+    setattr(cpu.registers, r_name, val)
 
+# Copy the value in register r8 into the byte pointed to by r16 (HL).
+# ex: 0x02 - LD [HL], A
+def LD_m8_r8(cpu, m8_name, r_name):
+    val = getattr(cpu.registers, r_name)
+    address = getattr(cpu.registers, m8_name)
+    cpu.write_d8(address, val)
+
+# Copy the value d8 into the byte pointed to by HL.
+# ex: 0x36 - LD [HL], n8
+def LD_m8_d8(cpu, r_name):
+    d8= cpu.read_d8()
+    address = getattr(cpu.registers, r_name)
+    cpu.write_d8(address, d8)
+
+
+# Copy the byte pointed to by HL into register A, and increment/decrement HL afterwards.
+# Increment is sometimes written as ‘LD A,[HL+]’, or ‘LDI A,[HL]’.
+# Decrement is sometimes written as ‘LD A,[HL-]’, or ‘LDD A,[HL]’.
+# Only used by instruction 0x2A (increment), 0x3A (decrement).
+def LD_A_HLID(cpu, increment=True):
+    address = cpu.registers.HL
+    cpu.registers.A = cpu.read_d8(address)
+    if increment:
+        cpu.registers.HL = (address + 1) & 0xffff
+    else:
+        cpu.registers.HL = (address - 1) & 0xffff
+
+# Copy the value in register A into the byte pointed by HL and increment/ decrement HL afterwards.
+# Similar to LD_A_HLID but in reverse.
+# known as ‘LD [HL+],A’ or ‘LDI [HL],A’ when incrementing, 
+# and ‘LD [HL-],A’ or ‘LDD [HL],A’ when decrementing.
+# Only used by instruction 0x22 (increment), 0x32 (decrement).
+def LD_HLID_A(cpu, increment=True):
+    address = cpu.registers.HL
+    cpu.write_d8(address, cpu.registers.A)
+    if increment:
+        cpu.registers.HL = (address + 1) & 0xffff
+    else:
+        cpu.registers.HL = (address - 1) & 0xffff
+
+# Load to the 8-bit A register, data from the address specified by the 8-bit immediate data n.
+# The full 16-bit absolute address is obtained by setting the most significant byte to 0xFF 
+# and the least significant byte to the value of n, so the possible range is 0xFF00-0xFFFF.
+# Only used by instruction 0xF0.
+# confusing opcode reference: https://gekkio.fi/files/gb-docs/gbctr.pdf
+def LD_A_d8(cpu):
+    address = cpu.read_d8() + 0xff00
+    if 0xff00 > address or  address > 0xffff:
+        raise ValueError(f"LD_A_d8 address out of range: {address:04x}")
+    val = cpu.read_d8(address)
+    cpu.registers.A = val
+
+# like LD_A_d8 (0xF0) but in reverse
+# Only used by instruction 0xE0.
+def LD_d8_A(cpu):
+    address = cpu.read_d8() + 0xff00
+    if 0xff00 > address or  address > 0xffff:
+        raise ValueError(f"LD_A_d8 address out of range: {address:04x}")
+    val = cpu.registers.A
+    cpu.write_d8(address, val)
+    
+# Copy the value in register A into the byte at address $FF00+C.
+# Only used by instruction 0xE2.
+def LDH_C_A(cpu):
+    value = cpu.registers.A
+    address = 0xff00 + cpu.registers.C
+    if 0xff00 > address or  address > 0xffff:
+        raise ValueError(f"LHD_d16_A address out of range: {address:04x}")
+    cpu.write_d8(address, value)
+
+# Load to the 8-bit A register, data from the address $FF00+C.
+# Only used by instruction 0xF2.
+def LDH_A_C(cpu):
+    address = 0xff00 + cpu.registers.C
+    if 0xff00 > address or  address > 0xffff:
+        raise ValueError(f"LHD_d16_A address out of range: {address:04x}")
+    value = cpu.read_d8(address)
+    cpu.registers.A = value
+
+
+# Copy the value in register A into the byte at address d16
+# Where d16 is read from the next two bytes of PC.
+# Only used by instruction 0xEA.
+def LD_d16_A(cpu):
+    val = cpu.registers.A
+    address = cpu.read_d16()
+    cpu.write_d8(address, val)
+    
+# Copy the value in byte at address d16 into register A.
+# Where d16 is read from the next two bytes of PC.
+# Only used by instruction 0xFA.
+def LD_A_d16(cpu):
+    address = cpu.read_d16()
+    value = cpu.read_d8(address)
+    cpu.registers.A = value
 
 ################################################################################
 # 16 bit arithmetic instructions
@@ -241,13 +346,14 @@ class OP_Handler():
         # 0x00..0x0f
         self.code_arr[0x00] = NOP
         self.code_arr[0x01] = lambda cpu: LD_r16_d16(cpu, "BC")
-        #
+        self.code_arr[0x02] = lambda cpu: LD_m8_r8(cpu, "BC", "A")
         self.code_arr[0x03] = lambda cpu: INC_r16(cpu, "BC")
         self.code_arr[0x04] = lambda cpu: INC_r8(cpu, "B")
         self.code_arr[0x05] = lambda cpu: DEC_r8(cpu, "B")
         self.code_arr[0x06] = lambda cpu: LD_r8_d8(cpu, "B")
         #
         #
+        self.code_arr[0x0a] = lambda cpu: LD_r8_m8(cpu, "A", "BC")
         self.code_arr[0x0b] = lambda cpu: DEC_r16(cpu, "BC")
         self.code_arr[0x0c] = lambda cpu: INC_r8(cpu, "C")
         self.code_arr[0x0d] = lambda cpu: DEC_r8(cpu, "C")
@@ -256,13 +362,14 @@ class OP_Handler():
 
         # 0x10..0x1f
         self.code_arr[0x11] = lambda cpu: LD_r16_d16(cpu, "DE")
-        #
+        self.code_arr[0x12] = lambda cpu: LD_m8_r8(cpu, "DE", "A")
         self.code_arr[0x13] = lambda cpu: INC_r16(cpu, "DE")
         self.code_arr[0x14] = lambda cpu: INC_r8(cpu, "D")
         self.code_arr[0x15] = lambda cpu: DEC_r8(cpu, "D")
         self.code_arr[0x16] = lambda cpu: LD_r8_d8(cpu, "D")
         #
         #
+        self.code_arr[0x1a] = lambda cpu: LD_r8_m8(cpu, "A", "DE")
         self.code_arr[0x1b] = lambda cpu: DEC_r16(cpu, "DE")
         self.code_arr[0x1c] = lambda cpu: INC_r8(cpu, "E")
         self.code_arr[0x1d] = lambda cpu: DEC_r8(cpu, "E")
@@ -271,13 +378,14 @@ class OP_Handler():
     
         # 0x20..0x2f
         self.code_arr[0x21] = lambda cpu: LD_r16_d16(cpu, "HL")
-        # 
+        self.code_arr[0x22] = lambda cpu: LD_HLID_A(cpu, increment=True)
         self.code_arr[0x23] = lambda cpu: INC_r16(cpu, "HL")
         self.code_arr[0x24] = lambda cpu: INC_r8(cpu, "H")
         self.code_arr[0x25] = lambda cpu: DEC_r8(cpu, "H")
         self.code_arr[0x26] = lambda cpu: LD_r8_d8(cpu, "H")
         #
         #
+        self.code_arr[0x2a] = lambda cpu: LD_A_HLID(cpu, increment=True)
         self.code_arr[0x2b] = lambda cpu: DEC_r16(cpu, "HL")
         self.code_arr[0x2c] = lambda cpu: INC_r8(cpu, "L")
         self.code_arr[0x2d] = lambda cpu: DEC_r8(cpu, "L")
@@ -286,12 +394,14 @@ class OP_Handler():
 
         # 0x30..0x3f
         self.code_arr[0x31] = lambda cpu: LD_r16_d16(cpu, "SP")
-        # 
+        self.code_arr[0x32] = lambda cpu: LD_HLID_A(cpu, increment=False)
         self.code_arr[0x33] = lambda cpu: INC_r16(cpu, "SP")
         self.code_arr[0x34] = lambda cpu: INC_r8(cpu, None, HL=True)
         self.code_arr[0x35] = lambda cpu: DEC_r8(cpu, None, HL=True)
+        self.code_arr[0x36] = lambda cpu: LD_m8_d8(cpu, "HL")
         #
         #
+        self.code_arr[0x3a] = lambda cpu: LD_A_HLID(cpu, increment=False)
         self.code_arr[0x3b] = lambda cpu: DEC_r16(cpu, "SP")
         self.code_arr[0x3c] = lambda cpu: INC_r8(cpu, "A")
         self.code_arr[0x3d] = lambda cpu: DEC_r8(cpu, "A")
@@ -305,7 +415,7 @@ class OP_Handler():
         self.code_arr[0x43] = lambda cpu: LD_r8_r8(cpu, "B", "E")
         self.code_arr[0x44] = lambda cpu: LD_r8_r8(cpu, "B", "H")
         self.code_arr[0x45] = lambda cpu: LD_r8_r8(cpu, "B", "L")
-        #
+        self.code_arr[0x46] = lambda cpu: LD_r8_m8(cpu, "B", "HL")
         self.code_arr[0x47] = lambda cpu: LD_r8_r8(cpu, "B", "A")
         self.code_arr[0x48] = lambda cpu: LD_r8_r8(cpu, "C", "B")
         self.code_arr[0x49] = lambda cpu: LD_r8_r8(cpu, "C", "C")
@@ -313,7 +423,7 @@ class OP_Handler():
         self.code_arr[0x4b] = lambda cpu: LD_r8_r8(cpu, "C", "E")
         self.code_arr[0x4c] = lambda cpu: LD_r8_r8(cpu, "C", "H")
         self.code_arr[0x4d] = lambda cpu: LD_r8_r8(cpu, "C", "L")
-        #
+        self.code_arr[0x4e] = lambda cpu: LD_r8_m8(cpu, "C", "HL")
         self.code_arr[0x4f] = lambda cpu: LD_r8_r8(cpu, "C", "A")
 
         # 0x50..0x5f
@@ -323,7 +433,7 @@ class OP_Handler():
         self.code_arr[0x53] = lambda cpu: LD_r8_r8(cpu, "D", "E")
         self.code_arr[0x54] = lambda cpu: LD_r8_r8(cpu, "D", "H")
         self.code_arr[0x55] = lambda cpu: LD_r8_r8(cpu, "D", "L")
-        #
+        self.code_arr[0x56] = lambda cpu: LD_r8_m8(cpu, "D", "HL")
         self.code_arr[0x57] = lambda cpu: LD_r8_r8(cpu, "D", "A")
         self.code_arr[0x58] = lambda cpu: LD_r8_r8(cpu, "E", "B")
         self.code_arr[0x59] = lambda cpu: LD_r8_r8(cpu, "E", "C")
@@ -331,7 +441,7 @@ class OP_Handler():
         self.code_arr[0x5b] = lambda cpu: LD_r8_r8(cpu, "E", "E")
         self.code_arr[0x5c] = lambda cpu: LD_r8_r8(cpu, "E", "H")
         self.code_arr[0x5d] = lambda cpu: LD_r8_r8(cpu, "E", "L")
-        #
+        self.code_arr[0x5e] = lambda cpu: LD_r8_m8(cpu, "E", "HL")
         self.code_arr[0x5f] = lambda cpu: LD_r8_r8(cpu, "E", "A")
 
         # 0x60..0x6f
@@ -341,7 +451,7 @@ class OP_Handler():
         self.code_arr[0x63] = lambda cpu: LD_r8_r8(cpu, "H", "E")
         self.code_arr[0x64] = lambda cpu: LD_r8_r8(cpu, "H", "H")
         self.code_arr[0x65] = lambda cpu: LD_r8_r8(cpu, "H", "L")
-        #
+        self.code_arr[0x56] = lambda cpu: LD_r8_m8(cpu, "H", "HL")
         self.code_arr[0x67] = lambda cpu: LD_r8_r8(cpu, "H", "A")
         self.code_arr[0x68] = lambda cpu: LD_r8_r8(cpu, "L", "B")
         self.code_arr[0x69] = lambda cpu: LD_r8_r8(cpu, "L", "C")
@@ -349,11 +459,18 @@ class OP_Handler():
         self.code_arr[0x6b] = lambda cpu: LD_r8_r8(cpu, "L", "E")
         self.code_arr[0x6c] = lambda cpu: LD_r8_r8(cpu, "L", "H")
         self.code_arr[0x6d] = lambda cpu: LD_r8_r8(cpu, "L", "L")
-        #
+        self.code_arr[0x6e] = lambda cpu: LD_r8_m8(cpu, "L", "HL")
         self.code_arr[0x6f] = lambda cpu: LD_r8_r8(cpu, "L", "A")
 
         # 0x70..0x7f
+        self.code_arr[0x70] = lambda cpu: LD_m8_r8(cpu, "HL", "B")
+        self.code_arr[0x71] = lambda cpu: LD_m8_r8(cpu, "HL", "C")
+        self.code_arr[0x72] = lambda cpu: LD_m8_r8(cpu, "HL", "D")
+        self.code_arr[0x73] = lambda cpu: LD_m8_r8(cpu, "HL", "E")
+        self.code_arr[0x74] = lambda cpu: LD_m8_r8(cpu, "HL", "H")
+        self.code_arr[0x75] = lambda cpu: LD_m8_r8(cpu, "HL", "L")
         #
+        self.code_arr[0x77] = lambda cpu: LD_m8_r8(cpu, "HL", "A")
         #
         self.code_arr[0x78] = lambda cpu: LD_r8_r8(cpu, "A", "B")
         self.code_arr[0x79] = lambda cpu: LD_r8_r8(cpu, "A", "C")
@@ -361,7 +478,7 @@ class OP_Handler():
         self.code_arr[0x7b] = lambda cpu: LD_r8_r8(cpu, "A", "E")
         self.code_arr[0x7c] = lambda cpu: LD_r8_r8(cpu, "A", "H")
         self.code_arr[0x7d] = lambda cpu: LD_r8_r8(cpu, "A", "L")
-        #
+        self.code_arr[0x7e] = lambda cpu: LD_r8_m8(cpu, "A", "HL")
         self.code_arr[0x7f] = lambda cpu: LD_r8_r8(cpu, "A", "A")
         
         # 0x80..0x8f 
@@ -435,6 +552,28 @@ class OP_Handler():
         self.code_arr[0xbd] = lambda cpu: CP_A_r8(cpu, "L")
         self.code_arr[0xbe] = lambda cpu: CP_A_r8(cpu, None, HL=True)
         self.code_arr[0xbf] = lambda cpu: CP_A_r8(cpu, "A")
+        
+
+
+        # 0xe0..0xef
+        self.code_arr[0xe0] = lambda cpu: LD_d8_A(cpu)
+        #
+        self.code_arr[0xe2] = lambda cpu: LDH_C_A(cpu)
+        #
+        #
+        self.code_arr[0xea] = lambda cpu: LD_d16_A(cpu)
+        #
+        #
+
+        # 0xf0..0xff
+        self.code_arr[0xf0] = lambda cpu: LD_A_d8(cpu)
+        #
+        self.code_arr[0xf2] = lambda cpu: LDH_A_C(cpu)
+        #
+        #
+        self.code_arr[0xfa] = lambda cpu: LD_A_d16(cpu)
+        #
+        #
 
     def run_code(self, cpu, code_num):
         fn = self.code_arr[code_num]
