@@ -31,10 +31,10 @@
 
 
 # opcode mapping for normal opcodes 
-from gb.cpu.instructions_array_1 import construct_code_array
+from gb.cpu.instructions.array_1 import construct_code_array
 
 # opcode mapping for 0xCB prefixed opcodes
-from gb.cpu.instructions_array_2 import construct_cb_code_array
+from gb.cpu.instructions.array_2 import construct_cb_code_array
 
 
 ################################################################################

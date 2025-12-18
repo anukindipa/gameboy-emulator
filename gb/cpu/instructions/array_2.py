@@ -1,4 +1,4 @@
-from gb.cpu.instructions_funcs_2 import *
+from gb.cpu.instructions.funcs_2 import *
 
 def construct_cb_code_array():
     code_arr = [None] * 256

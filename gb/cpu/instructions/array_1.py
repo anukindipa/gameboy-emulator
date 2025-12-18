@@ -11,11 +11,11 @@
 # d16 is a 16 bit value
 ################################################################################
 
-from gb.cpu.instructions_funcs_1_Arithmetic import *
-from gb.cpu.instructions_funcs_1_Bitwise_logic import *
-from gb.cpu.instructions_funcs_1_LD import *
-from gb.cpu.instructions_funcs_1_Misc import *
-from gb.cpu.instructions_funcs_1_Stack import *
+from gb.cpu.instructions.funcs_1_Arithmetic import *
+from gb.cpu.instructions.funcs_1_Bitwise_logic import *
+from gb.cpu.instructions.funcs_1_LD import *
+from gb.cpu.instructions.funcs_1_Misc import *
+from gb.cpu.instructions.funcs_1_Stack import *
 
 def construct_code_array():
     """
