@@ -11,10 +11,11 @@
 # E000–FDFF  -> Echo RAM (mirror of WRAM, Nintendo says "do not use")
 # FE00–FE9F  -> OAM (Object Attribite Memory - sprite table)
 # FEA0–FEFF  -> Not Usable
-# FF00–FF7F  -> IO registers (joypad)
+# FF00–FF7F  -> IO registers (joypad etc.)
 # FF80–FFFE  -> High RAM (HRAM)
 # FFFF       -> Interrupt Enable register
 
+from gb.util.ppu_modes import PPU_MODES
 
 class MMU():
     def __init__(self, mbc):
@@ -23,9 +24,10 @@ class MMU():
         # (ROM and External RAM)
         self.mbc = mbc
 
-        # TODO: decide who gets VRAM mmu or mbc
         # Vram: 8KB
         self.vram = bytearray(0x2000)
+        
+        # External RAM: 8KB - managed by MBC
         
         # Work RAM: 8KB
         self.wram = bytearray(0x2000)
@@ -34,6 +36,8 @@ class MMU():
 
         # OAM: 160 bytes
         self.oam = bytearray(0xA0)
+        
+        # Not Usable: 96 bytes
 
         # IO Registers: 128 bytes
         self.io_regs = bytearray(0x80)
@@ -43,6 +47,10 @@ class MMU():
 
         # interrupt enable register
         self.interrupt_enable = 0x00
+
+        # PPU mode handled by MMU
+        # see gb/ppu/__init__.py and https://gbdev.io/pandocs/Rendering.html
+        self.ppu_mode = PPU_MODES.H_BLANK  
         
         # boot Rom setup
         try:
