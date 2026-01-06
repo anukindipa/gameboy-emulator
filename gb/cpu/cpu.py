@@ -26,7 +26,7 @@ class CPU():
         opcode = self.read_d8()
 
         # decode and execute
-        cycles = self.OP_Handler.execute_opcode(self, opcode)
+        cycles = self.op_handler.execute_opcode(self, opcode)
         
         # TODO: handle cycles, interrupts, ppu steps, etc.
 

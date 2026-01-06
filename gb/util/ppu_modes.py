@@ -11,13 +11,13 @@ class PPU_MODES(Enum):
     # Mode 1
     # Each scanline takes 456 cycles
     # V Blank lasts for 10 scanlines (144 to 153)
-    V_BLANK = 4560
+    V_BLANK = 456
 
     # Mode 2
     OAM_SCAN = 80
 
     # Mode 3
-    VRAM_READ = 172
+    PIXEL_TRANSFER = 172
 
 def example_usage():
     # Usage example
