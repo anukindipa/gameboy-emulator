@@ -15,6 +15,7 @@
 # FF80–FFFE  -> High RAM (HRAM)
 # FFFF       -> Interrupt Enable register
 
+import numpy as np
 from gb.util.ppu_modes import PPU_MODES
 
 class MMU():
@@ -25,25 +26,25 @@ class MMU():
         self.mbc = mbc
 
         # Vram: 8KB
-        self.vram = bytearray(0x2000)
+        self.vram = np.zeros(0x2000, dtype=np.uint8)
         
         # External RAM: 8KB - managed by MBC
         
         # Work RAM: 8KB
-        self.wram = bytearray(0x2000)
+        self.wram = np.zeros(0x2000, dtype=np.uint8)
         
         # I'll not implement Echo RAM for now, as its useless
 
         # OAM: 160 bytes
-        self.oam = bytearray(0xA0)
+        self.oam = np.zeros(0xA0, dtype=np.uint8)
         
         # Not Usable: 96 bytes
 
         # IO Registers: 128 bytes
-        self.io_regs = bytearray(0x80)
+        self.io_regs = np.zeros(0x80, dtype=np.uint8)
 
         # High RAM: 127 bytes
-        self.hram = bytearray(0x7F)
+        self.hram = np.zeros(0x7F, dtype=np.uint8)
 
         # interrupt enable register
         self.interrupt_enable = 0x00
