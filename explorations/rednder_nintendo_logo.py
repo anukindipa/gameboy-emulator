@@ -65,3 +65,22 @@ print("Logo bitmap")
 print("--------------------------------------------")
 for row in convert_to_arr(Logo):
     print("".join([ '█' if p else ' ' for p in row]))
+
+# using half blocks to make pixels look like squares
+print("--------------------------------------------")
+print("Logo bitmap (using half blocks)")
+print("--------------------------------------------")
+for i in range(0, 8, 2):
+    row_top = convert_to_arr(Logo)[i]
+    row_bottom = convert_to_arr(Logo)[i+1]
+    line = ""
+    for p_top, p_bottom in zip(row_top, row_bottom):
+        if not p_top  and not p_bottom:
+            line += ' '  # both white
+        elif p_top and not p_bottom:
+            line += '▀'  # top filled
+        elif not p_top and p_bottom:
+            line += '▄'  # bottom filled
+        else:
+            line += '█'  # both filled
+    print(line)

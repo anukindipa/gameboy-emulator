@@ -44,55 +44,84 @@ def print_square():
 import curses
 import random
 
+stdscr = curses.initscr()
+curses.resize_term( 80, 160 )
 
-screen_buffer = [[(((i+j)*4))%16 for i in range(160)] for j in range(72)]
+screen_buffer = [[(((j+i)*4))%16 for i in range(160)] for j in range(72)]
+ch = '#'
 
-def print_shades_curses(stdscr):
-    curses.curs_set(0)  # Hide cursor
-    stdscr.idcok(False)
-    stdscr.idlok(False)
+curses.start_color()
+# Hide cursor
+curses.curs_set(0)
+# something to do with flicker reduction
+stdscr.idcok(False)
+stdscr.idlok(False)
+
+# Make getch() non-blocking (no pausing)
+stdscr.nodelay(True)
+
+# Define custom colors
+# Black, Dark Gray, Light Gray, White
+curses.init_color(curses.COLOR_BLACK, 0, 0, 0)
+curses.init_color(curses.COLOR_RED, 333, 333, 333)
+curses.init_color(curses.COLOR_MAGENTA, 667, 667, 667)
+curses.init_color(curses.COLOR_WHITE, 1000, 1000, 1000)
+
+# make color pairs (fg, bg)
+# fg,bg goes from black to white
+# each row has same bg color
+
+# 1-4: bg black
+curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_BLACK)
+curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
+
+curses.init_pair(5, curses.COLOR_BLACK, curses.COLOR_RED)
+curses.init_pair(6, curses.COLOR_RED, curses.COLOR_RED)
+curses.init_pair(7, curses.COLOR_MAGENTA, curses.COLOR_RED)
+curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_RED)
+
+curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
+curses.init_pair(10, curses.COLOR_RED, curses.COLOR_MAGENTA)
+curses.init_pair(11, curses.COLOR_MAGENTA, curses.COLOR_MAGENTA)
+curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
+
+curses.init_pair(13, curses.COLOR_BLACK, curses.COLOR_WHITE)
+curses.init_pair(14, curses.COLOR_RED, curses.COLOR_WHITE)
+curses.init_pair(15, curses.COLOR_MAGENTA, curses.COLOR_WHITE)
+curses.init_pair(16, curses.COLOR_WHITE, curses.COLOR_WHITE)
+
+
+# print a gameboy sized screen
+def print_shades_curses():
     stdscr.erase()
-    curses.start_color()
-
-    curses.init_color(curses.COLOR_BLACK, 0, 0, 0)
-    curses.init_color(curses.COLOR_RED, 333, 333, 333)
-    curses.init_color(curses.COLOR_MAGENTA, 667, 667, 667)
-    curses.init_color(curses.COLOR_WHITE, 1000, 1000, 1000)
-    
-    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-    curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_BLACK)
-    
-    curses.init_pair(5, curses.COLOR_BLACK, curses.COLOR_RED)
-    curses.init_pair(6, curses.COLOR_RED, curses.COLOR_RED)
-    curses.init_pair(7, curses.COLOR_MAGENTA, curses.COLOR_RED)
-    curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_RED)
-
-    curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_MAGENTA)
-    curses.init_pair(10, curses.COLOR_RED, curses.COLOR_MAGENTA)
-    curses.init_pair(11, curses.COLOR_MAGENTA, curses.COLOR_MAGENTA)
-    curses.init_pair(12, curses.COLOR_WHITE, curses.COLOR_MAGENTA)
-
-    curses.init_pair(13, curses.COLOR_BLACK, curses.COLOR_WHITE)
-    curses.init_pair(14, curses.COLOR_RED, curses.COLOR_WHITE)
-    curses.init_pair(15, curses.COLOR_MAGENTA, curses.COLOR_WHITE)
-    curses.init_pair(16, curses.COLOR_WHITE, curses.COLOR_WHITE)
             
     for i in range(72):
         for j in range(160):
             stdscr.addstr(i, j, "▀", curses.color_pair(screen_buffer[i][j]+1))
-            tmp = screen_buffer[-1]
-            screen_buffer[1:] = screen_buffer[:-1]
-            screen_buffer[0] = tmp
-    
+
+    # text at the bottom
+    stdscr.addstr(78, 0, "Curses 4-shade grayscale demo", curses.color_pair(4))
+    stdscr.addstr(79, 0, f"Last pressed char: {ch}", curses.color_pair(4))
     
     stdscr.refresh()
-    time.sleep(1/3)
-
+    time.sleep(1/120)
 
 
 import time
 if __name__ == "__main__":
-    for i in range(60):
-        curses.wrapper(print_shades_curses)
+    for i in range(600):
+        print_shades_curses()
+
+        # change the screen buffer every 2 frames
+        if i % 2 == 0:
+            screen_buffer[:] = screen_buffer[-1:] + screen_buffer[:-1]
+            continue
+
+        # get last pressed char
+        ch_read = stdscr.getch()
+        ch = chr(ch_read) if ch_read != -1 else ch
+        
+    # close curses
+    curses.endwin()
