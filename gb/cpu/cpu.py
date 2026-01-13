@@ -5,6 +5,7 @@
 
 from .registers import Registers
 from .instructions import OP_Handler
+from gb.util.bit_ops import d8_to_s8
 # TODO: decide if I want to import MMU here or pass it from outside
 # from gb.mmu import MMU
 
@@ -24,6 +25,8 @@ class CPU():
         # fetch
         # PC += 1 is handled by read_d8
         opcode = self.read_d8()
+        
+        # print(f"Executing opcode: {hex(opcode)} at PC: {hex(self.registers.PC-1)}")
 
         # decode and execute
         cycles = self.op_handler.execute_opcode(self, opcode)
@@ -38,6 +41,10 @@ class CPU():
             self.registers.PC += 1
 
         return self.memory.read_byte(address)
+    
+    def read_s8(self, address=None):
+        value = self.read_d8(address)
+        return d8_to_s8(value)
 
     def read_d16(self, address=None):
         # TODO: check if read_d16 is every called with addread not None

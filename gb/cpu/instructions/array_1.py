@@ -16,6 +16,7 @@ from gb.cpu.instructions.funcs_1_Bitwise_logic import *
 from gb.cpu.instructions.funcs_1_LD import *
 from gb.cpu.instructions.funcs_1_Misc import *
 from gb.cpu.instructions.funcs_1_Stack import *
+from gb.cpu.instructions.funcs_1_jumps_subr import *
 
 def construct_code_array():
     """
@@ -35,6 +36,7 @@ def construct_code_array():
     code_arr[0x06] = lambda cpu: LD_r8_d8(cpu, "B")
     #
     #
+    code_arr[0x09] = lambda cpu: ADD_HL_r16(cpu, "BC")
     code_arr[0x0a] = lambda cpu: LD_r8_m8(cpu, "A", "BC")
     code_arr[0x0b] = lambda cpu: DEC_r16(cpu, "BC")
     code_arr[0x0c] = lambda cpu: INC_r8(cpu, "C")
@@ -43,6 +45,7 @@ def construct_code_array():
     #
 
     # 0x10..0x1f
+    #
     code_arr[0x11] = lambda cpu: LD_r16_d16(cpu, "DE")
     code_arr[0x12] = lambda cpu: LD_m8_r8(cpu, "DE", "A")
     code_arr[0x13] = lambda cpu: INC_r16(cpu, "DE")
@@ -50,7 +53,8 @@ def construct_code_array():
     code_arr[0x15] = lambda cpu: DEC_r8(cpu, "D")
     code_arr[0x16] = lambda cpu: LD_r8_d8(cpu, "D")
     #
-    #
+    code_arr[0x18] = lambda cpu: JR_cc_s8(cpu, True)
+    code_arr[0x19] = lambda cpu: ADD_HL_r16(cpu, "DE")
     code_arr[0x1a] = lambda cpu: LD_r8_m8(cpu, "A", "DE")
     code_arr[0x1b] = lambda cpu: DEC_r16(cpu, "DE")
     code_arr[0x1c] = lambda cpu: INC_r8(cpu, "E")
@@ -59,6 +63,7 @@ def construct_code_array():
     #
 
     # 0x20..0x2f
+    code_arr[0x20] = lambda cpu: JR_cc_s8(cpu, not cpu.registers.z_flag)
     code_arr[0x21] = lambda cpu: LD_r16_d16(cpu, "HL")
     code_arr[0x22] = lambda cpu: LD_HLID_A(cpu, increment=True)
     code_arr[0x23] = lambda cpu: INC_r16(cpu, "HL")
@@ -66,29 +71,32 @@ def construct_code_array():
     code_arr[0x25] = lambda cpu: DEC_r8(cpu, "H")
     code_arr[0x26] = lambda cpu: LD_r8_d8(cpu, "H")
     #
-    #
+    code_arr[0x28] = lambda cpu: JR_cc_s8(cpu, cpu.registers.z_flag)
+    code_arr[0x29] = lambda cpu: ADD_HL_r16(cpu, "HL")
     code_arr[0x2a] = lambda cpu: LD_A_HLID(cpu, increment=True)
     code_arr[0x2b] = lambda cpu: DEC_r16(cpu, "HL")
     code_arr[0x2c] = lambda cpu: INC_r8(cpu, "L")
     code_arr[0x2d] = lambda cpu: DEC_r8(cpu, "L")
     code_arr[0x2e] = lambda cpu: LD_r8_d8(cpu, "L")
-    #
+    code_arr[0x2f] = lambda cpu: CPL(cpu)
 
     # 0x30..0x3f
+    code_arr[0x30] = lambda cpu: JR_cc_s8(cpu, not cpu.registers.c_flag)
     code_arr[0x31] = lambda cpu: LD_r16_d16(cpu, "SP")
     code_arr[0x32] = lambda cpu: LD_HLID_A(cpu, increment=False)
     code_arr[0x33] = lambda cpu: INC_r16(cpu, "SP")
     code_arr[0x34] = lambda cpu: INC_r8(cpu, None, HL=True)
     code_arr[0x35] = lambda cpu: DEC_r8(cpu, None, HL=True)
     code_arr[0x36] = lambda cpu: LD_m8_d8(cpu, "HL")
-    #
-    #
+    code_arr[0x37] = lambda cpu: SCF(cpu)
+    code_arr[0x38] = lambda cpu: JR_cc_s8(cpu, cpu.registers.c_flag)
+    code_arr[0x39] = lambda cpu: ADD_HL_r16(cpu, "SP")
     code_arr[0x3a] = lambda cpu: LD_A_HLID(cpu, increment=False)
     code_arr[0x3b] = lambda cpu: DEC_r16(cpu, "SP")
     code_arr[0x3c] = lambda cpu: INC_r8(cpu, "A")
     code_arr[0x3d] = lambda cpu: DEC_r8(cpu, "A")
     code_arr[0x3e] = lambda cpu: LD_r8_d8(cpu, "A")
-    #
+    code_arr[0x3f] = lambda cpu: CCF(cpu)
 
     # 0x40..0x4f
     code_arr[0x40] = lambda cpu: LD_r8_r8(cpu, "B", "B")
@@ -153,7 +161,6 @@ def construct_code_array():
     code_arr[0x75] = lambda cpu: LD_m8_r8(cpu, "HL", "L")
     #
     code_arr[0x77] = lambda cpu: LD_m8_r8(cpu, "HL", "A")
-    #
     code_arr[0x78] = lambda cpu: LD_r8_r8(cpu, "A", "B")
     code_arr[0x79] = lambda cpu: LD_r8_r8(cpu, "A", "C")
     code_arr[0x7a] = lambda cpu: LD_r8_r8(cpu, "A", "D")
@@ -236,15 +243,33 @@ def construct_code_array():
     code_arr[0xbf] = lambda cpu: CP_A_r8(cpu, "A")
 
 
+    # 0xc0..0xcf 
+    #
+    code_arr[0xc6] = lambda cpu: ADD_A_r8(cpu, None, d8=True)
+    #
+    code_arr[0xce] = lambda cpu: ADC_A_r8(cpu, None, d8=True)
+    #
+
+    # 0xd0..0xdf 
+    #
+    code_arr[0xd6] = lambda cpu: SUB_A_r8(cpu, None, d8=True)
+    #
+    code_arr[0xde] = lambda cpu: SBC_A_r8(cpu, None, d8=True)
+    #
+
 
     # 0xe0..0xef
     code_arr[0xe0] = lambda cpu: LD_d8_A(cpu)
     #
     code_arr[0xe2] = lambda cpu: LDH_C_A(cpu)
     #
+    code_arr[0xe6] = lambda cpu: AND_A_r8(cpu, None, d8=True)
+    #
+    code_arr[0xe8] = lambda cpu: ADD_SP_s8(cpu)
     #
     code_arr[0xea] = lambda cpu: LD_d16_A(cpu)
     #
+    code_arr[0xee] = lambda cpu: XOR_A_r8(cpu, None, d8=True)
     #
 
     # 0xf0..0xff
@@ -252,9 +277,15 @@ def construct_code_array():
     #
     code_arr[0xf2] = lambda cpu: LDH_A_C(cpu)
     #
+    code_arr[0xf6] = lambda cpu: OR_A_r8(cpu, None, d8=True)
+    #
+    code_arr[0xf8] = lambda cpu: LD_HL_SP_plus_s8(cpu)
+    code_arr[0xf9] = lambda cpu: LD_SP_HL(cpu)
     #
     code_arr[0xfa] = lambda cpu: LD_A_d16(cpu)
     #
+    #
+    code_arr[0xfe] = lambda cpu: CP_A_r8(cpu, None, d8=True)
     #
 
     return code_arr

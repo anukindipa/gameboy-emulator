@@ -18,8 +18,17 @@ def DEC_r16(cpu, r_name):
     setattr(cpu.registers, r_name, val)
 
 def ADD_HL_r16(cpu, r_name):
-    # TODO: implement
-    pass
+    r = getattr(cpu.registers, r_name)
+    hl = cpu.registers.HL
+    res = hl + r
+
+    cpu.registers.n_flag = 0
+    # ovrtlow for the 11th bit  
+    cpu.registers.h_flag = int((hl & 0x0FFF) + (r & 0x0FFF) > 0x0FFF)
+    # ovrtlow for the 15th bit  
+    cpu.registers.c_flag = int(res > 0xFFFF)
+    
+    cpu.registers.HL = res & 0xFFFF
 
 
 ################################################################################
@@ -27,9 +36,11 @@ def ADD_HL_r16(cpu, r_name):
 #   - ADD, INC, DEC, ADC, SUB, SBC, CP
 ################################################################################
 
-def ADD_A_r8(cpu, r_name, HL=False):
+def ADD_A_r8(cpu, r_name, HL=False, d8 = False):
     if HL:
         r = cpu.read_d8(cpu.registers.HL)
+    elif d8:
+        r = cpu.read_d8()
     else:
         r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
@@ -37,7 +48,9 @@ def ADD_A_r8(cpu, r_name, HL=False):
 
     cpu.registers.z_flag = int((res & 0xff) == 0)
     cpu.registers.n_flag = 0
-    cpu.registers.h_flag = int(a + r > 0xf)
+    # check overflow for the 3rd bit
+    cpu.registers.h_flag = int((a & 0xf) + (r & 0xf) > 0xf)
+    #  overflow for the 7th bit
     cpu.registers.c_flag = int(res > 0xff)
 
     cpu.registers.A = res & 0xff
@@ -73,9 +86,11 @@ def DEC_r8(cpu, r_name, HL=False):
     cpu.registers.n_flag = 1
     cpu.registers.h_flag = int(val&0xf == 0xf)
 
-def ADC_A_r8(cpu, r_name, HL=False):
+def ADC_A_r8(cpu, r_name, HL=False, d8 = False):
     if HL:
         r = cpu.read_d8(cpu.registers.HL)
+    elif d8:
+        r = cpu.read_d8()
     else:
         r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
@@ -89,9 +104,11 @@ def ADC_A_r8(cpu, r_name, HL=False):
 
     cpu.registers.A = res & 0xff
 
-def SUB_A_r8(cpu, r_name, HL=False):
+def SUB_A_r8(cpu, r_name, HL=False, d8 = False):
     if HL:
         r = cpu.read_d8(cpu.registers.HL)
+    elif d8:
+        r = cpu.read_d8()
     else:
         r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
@@ -100,14 +117,17 @@ def SUB_A_r8(cpu, r_name, HL=False):
     # %0x100 is used just in case
     cpu.registers.z_flag = int((res%0x100) == 0)
     cpu.registers.n_flag = 1
-    cpu.registers.h_flag = int(r%0x10 > a%0x10)
+    cpu.registers.h_flag = int(a%0x10 < r%0x10)
     cpu.registers.c_flag = int(r > a)
 
     cpu.registers.A = res % 0x100
 
-def SBC_A_r8(cpu, r_name, HL=False):
+def SBC_A_r8(cpu, r_name, HL=False, d8 = False):
+    """Subtract r8 AND carry_flag from A"""
     if HL:
         r = cpu.read_d8(cpu.registers.HL)
+    elif d8:
+        r = cpu.read_d8()
     else:
         r = getattr(cpu.registers, r_name)
     a = cpu.registers.A
@@ -116,24 +136,29 @@ def SBC_A_r8(cpu, r_name, HL=False):
 
     cpu.registers.z_flag = int((res%0x100) == 0)
     cpu.registers.n_flag = 1
-    cpu.registers.h_flag = int(((r+c) % 0xf) > (a%0xf))
+    # check burrowing for the 4th bit
+    cpu.registers.h_flag = int((a & 0xf) < ((r & 0xf) + c))
+    # check burrow (if negative)
     cpu.registers.c_flag = int(r + c > a)
 
     cpu.registers.A = res % 0x100
 
-def CP_A_r8(cpu, r_name, HL=False):
+def CP_A_r8(cpu, r_name, HL=False, d8 = False):
     """
     compare (not copy) r8 to A. Done by subtracting r8 from A and setting flags.
     result is discarded
     """
     if HL:
         r = cpu.read_d8(cpu.registers.HL)
+    elif d8:
+        r = cpu.read_d8()
     else:
         r = getattr(cpu.registers, r_name)
+
     a = cpu.registers.A
     res = a - r
 
     cpu.registers.z_flag = int((res%0x100) == 0)
     cpu.registers.n_flag = 1
-    cpu.registers.h_flag = int((r%0x10) > (a%0x10))
+    cpu.registers.h_flag = int((a%0x10) < (r%0x10))
     cpu.registers.c_flag = int(r > a)
