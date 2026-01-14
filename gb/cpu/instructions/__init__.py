@@ -51,14 +51,14 @@ class OP_Handler():
     def run_code(self, cpu, code_num):
         fn = self.code_arr[code_num]
         if fn==None:
-            raise NotImplementedError(f"opcode {code_num} is not implemented.\n\
+            raise NotImplementedError(f"opcode {hex(code_num)} is not implemented.\n\
                     Program Counter at: {cpu.registers.PC-1:04x}")
         fn(cpu)
 
     def run_cb_code(self, cpu, code_num):
         fn = self.cb_code_arr[code_num]
         if fn==None:
-            raise NotImplementedError(f"opcode 0xCB, {code_num} is not implemented")
+            raise NotImplementedError(f"opcode 0xCB, {hex(code_num)} is not implemented")
         fn(cpu)
 
     def execute_opcode(self, cpu, opcode):
