@@ -14,8 +14,7 @@ def run():
     # Main emulation loop (simplified)
     while True:
         # Execute one CPU instruction
-        cpu_cycles = cpu.step()
-        cycles = 0 if not cpu_cycles else cpu_cycles
+        cycles = cpu.step()
 
         # Step PPU with the number of cycles taken by CPU
         ppu.step(cycles)

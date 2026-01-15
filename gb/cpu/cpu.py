@@ -22,16 +22,20 @@ class CPU():
 
 
     def step(self):
+        # for logging
+        PC_before = self.registers.PC
+
         # fetch
         # PC += 1 is handled by read_d8
         opcode = self.read_d8()
         
-        # print(f"Executing opcode: {hex(opcode)} at PC: {hex(self.registers.PC-1)}")
-
         # decode and execute
         cycles = self.op_handler.execute_opcode(self, opcode)
-        
-        # TODO: handle cycles, interrupts, ppu steps, etc.
+
+        # for logging
+        print(f"Opcode {hex(opcode)} took {cycles:-2} cycles. PC: {hex(PC_before)}")
+
+        return cycles
 
     
     def read_d8(self, address=None):
