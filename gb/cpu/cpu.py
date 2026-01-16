@@ -32,8 +32,9 @@ class CPU():
         # decode and execute
         cycles = self.op_handler.execute_opcode(self, opcode)
 
-        # for logging
-        print(f"Opcode {hex(opcode)} took {cycles:-2} cycles. PC: {hex(PC_before)}")
+        # Optional debug logging; comment out for performance
+        # print(f"Opcode {hex(opcode)} took {cycles:-2} cycles. PC: {hex(PC_before)}")
+        print(f"PC before: {hex(PC_before)}")
 
         return cycles
 
@@ -43,8 +44,10 @@ class CPU():
             address = self.registers.PC
             # TODO: check if this is correct
             self.registers.PC += 1
-
-        return self.memory.read_byte(address)
+        mem = self.memory.read_byte(address)
+        if mem < 0 or mem > 0xFF:
+            raise ValueError(f"read_d8 value must be between 0 and 255, got {mem}")
+        return mem
     
     def read_s8(self, address=None):
         value = self.read_d8(address)
@@ -52,16 +55,21 @@ class CPU():
 
     def read_d16(self, address=None):
         # TODO: check if read_d16 is every called with addread not None
-        if address is None:
-            lsb = self.read_d8()
-            msb = self.read_d8()
-            return (msb << 8) | lsb
-        else:
-            ValueError("read_d16 with address not None not implemented yet")
+        if address:
+            raise ValueError("read_d16 with address not None not implemented yet")
+
+        lsb = self.read_d8()
+        msb = self.read_d8()
+        v = (msb << 8) | lsb
+        if v < 0 or v > 0xFFFF:
+            raise ValueError(f"read_d16 value out of range, v = {v}, address = {hex(address)}, lsb = {lsb}, msb = {msb}")
+        return v
 
 
 
     def write_d8(self, address=None, value=0):
         if address is None:
             address = self.registers.PC
+        if value < 0 or value > 0xFF:
+            raise ValueError(f"write_d8 value must be between 0 and 255, got {value} at address {hex(address)}")
         self.memory.write_byte(address, value) 

@@ -35,7 +35,7 @@ def construct_code_array():
     code_arr[0x05] = lambda cpu: DEC_r8(cpu, "B")
     code_arr[0x06] = lambda cpu: LD_r8_d8(cpu, "B")
     #
-    #
+    code_arr[0x08] = lambda cpu: LD_d16_SP(cpu)
     code_arr[0x09] = lambda cpu: ADD_HL_r16(cpu, "BC")
     code_arr[0x0a] = lambda cpu: LD_r8_m8(cpu, "A", "BC")
     code_arr[0x0b] = lambda cpu: DEC_r16(cpu, "BC")
@@ -245,8 +245,10 @@ def construct_code_array():
 
     # 0xc0..0xcf 
     #
+    code_arr[0xc5] = lambda cpu: PUSH_r16(cpu, "BC")
     code_arr[0xc6] = lambda cpu: ADD_A_r8(cpu, None, d8=True)
     #
+    code_arr[0xcd] = lambda cpu: CALL_cc_d16(cpu, True)
     code_arr[0xce] = lambda cpu: ADC_A_r8(cpu, None, d8=True)
     #
 

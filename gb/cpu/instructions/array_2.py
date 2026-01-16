@@ -28,7 +28,7 @@ def construct_cb_code_array():
             code_arr[i] =  lambda cpu, bit_num=bit_num, reg=reg: BIT_n_r8(cpu, bit_num, reg)
             # print(f"opcode {hex(i)}: BIT {bit_num}, {reg}")
     
-    # 0x80 - 0xFF
+    # 0x80 - 0xBF
     for i in range(0x80, 0xC0):
         bit_num = (i - 0x80) // 8
         reg = regs[i % 8]

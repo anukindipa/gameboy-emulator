@@ -36,6 +36,9 @@ from gb.cpu.instructions.array_1 import construct_code_array
 # opcode mapping for 0xCB prefixed opcodes
 from gb.cpu.instructions.array_2 import construct_cb_code_array
 
+# cycle count tables
+from gb.cpu.instructions.cycle_arr_1 import cycle_arr_1
+from gb.cpu.instructions.cycle_arr_2 import cycle_arr_2
 
 ################################################################################
 # code handler
@@ -67,5 +70,13 @@ class OP_Handler():
         if opcode==0xcb:
             cb_opcode = cpu.read_d8()
             self.run_cb_code(cpu, cb_opcode)
+            # +4 for the CB prefix fetch
+            cycles = cycle_arr_2[cb_opcode] + 4  
+            print(f"Opcode 0xCB {hex(cb_opcode):4} took {cycles:-2} cycles.", end=' ')
+            return cycles
+
         else:
             self.run_code(cpu, opcode)
+            cycles = cycle_arr_1[opcode]
+            print(f"Opcode {hex(opcode):9} took {cycles:-2} cycles.", end=' ')
+            return cycles

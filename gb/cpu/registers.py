@@ -44,16 +44,34 @@ class Registers():
     # retrieving values from pair registers
     @property
     def AF(self):
-        return (self.A << 8) | self.F
+        # sometimes A and F are read from memory so are treated as uint8.
+        # But that causes an error when combining FA to make a 16bit value.
+        # so we ensure A and F are treated as int here.
+        af = (int(self.A) << 8) | int(self.F)
+        if af < 0 or af > 0xFFFF:
+            raise ValueError(f"AF register value out of range: {af}")
+        return af
+
     @property
     def BC(self):
-        return (self.B << 8) | self.C
+        bc = (int(self.B) << 8) | int(self.C)
+        if bc < 0 or bc > 0xFFFF:
+            raise ValueError(f"BC register value out of range: {bc}")
+        return bc
+
     @property
     def DE(self):
-        return (self.D << 8) | self.E
+        de = (int(self.D) << 8) | int(self.E)
+        if de < 0 or de > 0xFFFF:
+            raise ValueError(f"DE register value out of range: {de}")
+        return de
+
     @property
     def HL(self):
-        return (self.H << 8) | self.L
+        hl = (int(self.H) << 8) | int(self.L)
+        if hl < 0 or hl > 0xFFFF:
+            raise ValueError(f"HL register value out of range: {hl}")
+        return hl
     
     # setting register values for pair registers
     @AF.setter
@@ -63,18 +81,34 @@ class Registers():
         and assigns first 8 bits to register A
         and the next 8 bits to register F
         """
+        if val < 0 or val > 0xFFFF:
+            raise ValueError(f"AF register value out of range: {val}")
         self.A = (val & 0xFF00) >> 8
-        self.F = val & 0xFF
+        self.F = val & 0xF0
+        # updating F register also updates flag values
+        # TODO: check if this is correct
+        self.z_flag =  bool(self.F & self.Z_FLAG)
+        self.n_flag =  bool(self.F & self.N_FLAG)
+        self.h_flag =  bool(self.F & self.H_FLAG)
+        self.c_flag =  bool(self.F & self.C_FLAG)
+
+
     @BC.setter
     def BC(self, val):
+        if val < 0 or val > 0xFFFF:
+            raise ValueError(f"BC register value out of range: {val}")
         self.B = (val & 0xFF00) >> 8
         self.C = val & 0xFF
     @DE.setter
     def DE(self, val):
+        if val < 0 or val > 0xFFFF:
+            raise ValueError(f"DE register value out of range: {val}")
         self.D = (val & 0xFF00) >> 8
         self.E = val & 0xFF
     @HL.setter
     def HL(self, val):
+        if val < 0 or val > 0xFFFF:
+            raise ValueError(f"HL register value out of range: {val}")
         self.H = (val & 0xFF00) >> 8
         self.L = val & 0xFF
         
@@ -122,3 +156,12 @@ class Registers():
     @c_flag.setter
     def c_flag(self, value):
         self._set_flag(self.C_FLAG, value)
+
+    def print_registers(self):
+        """Debug function to print all register values"""
+        print(f"A: {hex(self.A)} F: {hex(self.F)}", end =' ')
+        print(f"B: {hex(self.B)} C: {hex(self.C)}", end =' ')
+        print(f"D: {hex(self.D)} E: {hex(self.E)}", end =' ')
+        print(f"H: {hex(self.H)} L: {hex(self.L)}", end =' ')
+        print(f"SP: {hex(self.SP)} PC: {hex(self.PC)}", end=' ')
+        print(f"Flags - Z: {self.z_flag} N: {self.n_flag} H: {self.h_flag} C: {self.c_flag}")
