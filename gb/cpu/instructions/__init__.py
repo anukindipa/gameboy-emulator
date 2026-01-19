@@ -54,29 +54,24 @@ class OP_Handler():
     def run_code(self, cpu, code_num):
         fn = self.code_arr[code_num]
         if fn==None:
-            raise NotImplementedError(f"opcode {hex(code_num)} is not implemented.\n\
-                    Program Counter at: {cpu.registers.PC-1:04x}")
+            raise NotImplementedError(f"opcode {hex(code_num)} is not implemented. PC: {cpu.registers.PC-1:04x}")
         fn(cpu)
 
     def run_cb_code(self, cpu, code_num):
         fn = self.cb_code_arr[code_num]
         if fn==None:
-            raise NotImplementedError(f"opcode 0xCB, {hex(code_num)} is not implemented")
+            raise NotImplementedError(f"opcode 0xCB, {hex(code_num)} is not implemented. PC: {cpu.registers.PC-1:04x}")
         fn(cpu)
 
     def execute_opcode(self, cpu, opcode):
-        if opcode is None:
-            raise ValueError("opcode is None")
         if opcode==0xcb:
             cb_opcode = cpu.read_d8()
             self.run_cb_code(cpu, cb_opcode)
             # +4 for the CB prefix fetch
             cycles = cycle_arr_2[cb_opcode] + 4  
-            print(f"Opcode 0xCB {hex(cb_opcode):4} took {cycles:-2} cycles.", end=' ')
             return cycles
 
         else:
             self.run_code(cpu, opcode)
             cycles = cycle_arr_1[opcode]
-            print(f"Opcode {hex(opcode):9} took {cycles:-2} cycles.", end=' ')
             return cycles

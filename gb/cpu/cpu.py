@@ -34,7 +34,6 @@ class CPU():
 
         # Optional debug logging; comment out for performance
         # print(f"Opcode {hex(opcode)} took {cycles:-2} cycles. PC: {hex(PC_before)}")
-        print(f"PC before: {hex(PC_before)}")
 
         return cycles
 

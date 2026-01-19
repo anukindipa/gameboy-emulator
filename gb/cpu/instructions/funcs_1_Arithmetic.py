@@ -9,12 +9,12 @@ def INC_r16(cpu, r_name):
     So INC_r16 does not affect flags"""
     val = getattr(cpu.registers, r_name)
     # wrap around
-    val = (val+1) & 0xffff 
+    val = (val+1) & 0xFFFF 
     setattr(cpu.registers, r_name, val)
 
 def DEC_r16(cpu, r_name):
     val = getattr(cpu.registers, r_name)
-    val = (val-1) % 0x10000 
+    val = (val-1) & 0xFFFF 
     setattr(cpu.registers, r_name, val)
 
 def ADD_HL_r16(cpu, r_name):
@@ -76,11 +76,11 @@ def DEC_r8(cpu, r_name, HL=False):
         # TODO: check if behavior is correct
         addr = cpu.registers.HL
         val = cpu.read_d8(addr)
-        val = (val-1) % 0x100
+        val = (val-1) & 0xFF
         cpu.write_d8(addr, val)
     else:
         val = getattr(cpu.registers, r_name)
-        val = (val-1) % 0x100
+        val = (val-1) & 0xFF
         setattr(cpu.registers, r_name, val)
     cpu.registers.z_flag = int(val==0)
     cpu.registers.n_flag = 1
@@ -115,12 +115,12 @@ def SUB_A_r8(cpu, r_name, HL=False, d8 = False):
     res = a - r
 
     # %0x100 is used just in case
-    cpu.registers.z_flag = int((res%0x100) == 0)
+    cpu.registers.z_flag = int((res & 0xff) == 0)
     cpu.registers.n_flag = 1
-    cpu.registers.h_flag = int(a%0x10 < r%0x10)
+    cpu.registers.h_flag = int((a & 0x10) < (r & 0x10))
     cpu.registers.c_flag = int(r > a)
 
-    cpu.registers.A = res % 0x100
+    cpu.registers.A = res & 0xff
 
 def SBC_A_r8(cpu, r_name, HL=False, d8 = False):
     """Subtract r8 AND carry_flag from A"""
@@ -134,14 +134,14 @@ def SBC_A_r8(cpu, r_name, HL=False, d8 = False):
     c = cpu.registers.c_flag
     res = a - (r + c)
 
-    cpu.registers.z_flag = int((res%0x100) == 0)
+    cpu.registers.z_flag = int((res & 0xff) == 0)
     cpu.registers.n_flag = 1
     # check burrowing for the 4th bit
     cpu.registers.h_flag = int((a & 0xf) < ((r & 0xf) + c))
     # check burrow (if negative)
     cpu.registers.c_flag = int(r + c > a)
 
-    cpu.registers.A = res % 0x100
+    cpu.registers.A = res & 0xFF
 
 def CP_A_r8(cpu, r_name, HL=False, d8 = False):
     """
@@ -158,7 +158,7 @@ def CP_A_r8(cpu, r_name, HL=False, d8 = False):
     a = cpu.registers.A
     res = a - r
 
-    cpu.registers.z_flag = int((res%0x100) == 0)
+    cpu.registers.z_flag = int((res & 0xff) == 0)
     cpu.registers.n_flag = 1
-    cpu.registers.h_flag = int((a%0x10) < (r%0x10))
+    cpu.registers.h_flag = int((a & 0x10) < (r & 0x10))
     cpu.registers.c_flag = int(r > a)
