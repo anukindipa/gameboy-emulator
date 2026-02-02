@@ -58,7 +58,8 @@ def LD_A_HLID(cpu, increment=True):
 # Only used by instruction 0x22 (increment), 0x32 (decrement).
 def LD_HLID_A(cpu, increment=True):
     address = cpu.registers.HL
-    cpu.write_d8(address, cpu.registers.A)
+    val = cpu.registers.A
+    cpu.write_d8(address, val)
     if increment:
         cpu.registers.HL = (address + 1) & 0xffff
     else:

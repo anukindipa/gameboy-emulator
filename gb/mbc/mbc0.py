@@ -11,7 +11,7 @@ class MBC0():
         with open(rom_path, "rb") as f:
             rom_bytes = f.read()
             rom_size = min(len(rom_bytes), 0x8000)
-            self._rom_data = self._rom_data[:rom_size]
+            self._rom_data = bytearray(rom_bytes[:rom_size])
     
     def read_byte(self, address):
         if address < 0x8000:

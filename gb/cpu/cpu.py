@@ -19,7 +19,10 @@ class CPU():
 
         # opcode handler
         self.op_handler = OP_Handler()
-
+        
+        # if not self.memory.boot_rom_enabled:
+        #     # Setup CPU state as if boot rom has been run
+        #     self.no_boot_rom_setup()  
 
     def step(self):
         # for logging
@@ -72,3 +75,18 @@ class CPU():
         if value < 0 or value > 0xFF:
             raise ValueError(f"write_d8 value must be between 0 and 255, got {value} at address {hex(address)}")
         self.memory.write_byte(address, value) 
+
+    def no_boot_rom_setup(self):
+        """Setup CPU and MMU state as if boot rom has been run"""
+        self.registers.AF = 0x01B0
+        self.registers.BC = 0x0013
+        self.registers.DE = 0x00D8
+        self.registers.HL = 0x014D
+        self.registers.SP = 0xFFFE
+        self.registers.PC = 0x0100
+
+        # MMU state setup
+        self.memory.io_regs[0x40] = 0x91  # LCDC
+        self.memory.io_regs[0x47] = 0xFC  # BGP
+        self.memory.io_regs[0x48] = 0xFF  # OBP0
+        self.memory.io_regs[0x49] = 0xFF  # OBP1;

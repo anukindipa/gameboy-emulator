@@ -5,7 +5,14 @@ def construct_cb_code_array():
     regs = ['B', 'C', 'D', 'E', 'H', 'L', None, 'A']
     
     # 0x00 - 0x0F
-
+    code_arr[0x10] = lambda cpu: RL_r8(cpu, 'B')
+    code_arr[0x11] = lambda cpu: RL_r8(cpu, 'C')
+    code_arr[0x12] = lambda cpu: RL_r8(cpu, 'D')
+    code_arr[0x13] = lambda cpu: RL_r8(cpu, 'E')
+    code_arr[0x14] = lambda cpu: RL_r8(cpu, 'H')
+    code_arr[0x15] = lambda cpu: RL_r8(cpu, 'L')
+    code_arr[0x16] = lambda cpu: RL_r8(cpu, None, HL=True)
+    code_arr[0x17] = lambda cpu: RL_r8(cpu, 'A')
 
 
 
