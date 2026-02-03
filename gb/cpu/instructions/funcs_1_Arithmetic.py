@@ -117,7 +117,7 @@ def SUB_A_r8(cpu, r_name, HL=False, d8 = False):
     # %0x100 is used just in case
     cpu.registers.z_flag = int((res & 0xff) == 0)
     cpu.registers.n_flag = 1
-    cpu.registers.h_flag = int((a & 0x10) < (r & 0x10))
+    cpu.registers.h_flag = int((a & 0xf) < (r & 0xf))
     cpu.registers.c_flag = int(r > a)
 
     cpu.registers.A = res & 0xff
@@ -160,5 +160,5 @@ def CP_A_r8(cpu, r_name, HL=False, d8 = False):
 
     cpu.registers.z_flag = int((res & 0xff) == 0)
     cpu.registers.n_flag = 1
-    cpu.registers.h_flag = int((a & 0x10) < (r & 0x10))
+    cpu.registers.h_flag = int((a & 0xf) < (r & 0xf))
     cpu.registers.c_flag = int(r > a)
