@@ -2,8 +2,10 @@ from gb.mbc.mbc0 import MBC0
 from gb.mmu import MMU
 from gb.cpu.cpu import CPU
 from gb.ppu import PPU
-from gb.ppu.terminal_renderer import TerminalRenderer
-from gb.ppu.pygame_renderer import PygameRenderer
+# from gb.ppu.terminal_renderer import TerminalRenderer
+# from gb.ppu.pygame_renderer import PygameRenderer
+# from gb.ppu.vram_pygame_renderer import VramPygameRenderer
+from gb.ppu.sdl_renderer import SDLRenderer
 
 def run():
     # Initialize components
@@ -14,7 +16,9 @@ def run():
     mmu = MMU(mbc=mbc)
 
     # renderer = TerminalRenderer()
-    renderer = PygameRenderer(scale=3)
+    # renderer = PygameRenderer(scale=3)
+    renderer = SDLRenderer(scale=3)
+    # renderer = VramPygameRenderer(scale=3)
     cpu = CPU(mmu=mmu)
     ppu = PPU(mmu=mmu, renderer=renderer)
 
