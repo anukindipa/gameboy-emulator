@@ -16,6 +16,9 @@ def run():
     # Using MBC0 for no bank switching
     # No ROM loaded for this example
     mbc = MBC0("./roms/tetris.gb")
+    
+    # Pokemon Red
+    # mbc = MBC1("./roms/pokemon_red.gb")
 
     # Test ROMs
     # mbc = MBC0("./tests/cpu_test_roms/cpu_instrs.gb")

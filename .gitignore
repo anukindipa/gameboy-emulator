@@ -3,3 +3,7 @@
 
 # pycache folders
 **/__pycache__/
+
+# Rom files
+roms/
+gb/boot/dmg_boot.gb
