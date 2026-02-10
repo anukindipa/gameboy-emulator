@@ -13,8 +13,42 @@ def construct_cb_code_array():
     code_arr[0x15] = lambda cpu: RL_r8(cpu, 'L')
     code_arr[0x16] = lambda cpu: RL_r8(cpu, None, HL=True)
     code_arr[0x17] = lambda cpu: RL_r8(cpu, 'A')
+    code_arr[0x18] = lambda cpu: RR_r8(cpu, 'B')
+    code_arr[0x19] = lambda cpu: RR_r8(cpu, 'C')
+    code_arr[0x1a] = lambda cpu: RR_r8(cpu, 'D')
+    code_arr[0x1b] = lambda cpu: RR_r8(cpu, 'E')
+    code_arr[0x1c] = lambda cpu: RR_r8(cpu, 'H')
+    code_arr[0x1d] = lambda cpu: RR_r8(cpu, 'L')
+    code_arr[0x1e] = lambda cpu: RR_r8(cpu, None, HL=True)
+    code_arr[0x1f] = lambda cpu: RR_r8(cpu, 'A')
 
+    # 0x20 - 0x2F
+    code_arr[0x20] = lambda cpu: SLA_r8(cpu, 'B')
+    code_arr[0x21] = lambda cpu: SLA_r8(cpu, 'C')
+    code_arr[0x22] = lambda cpu: SLA_r8(cpu, 'D')
+    code_arr[0x23] = lambda cpu: SLA_r8(cpu, 'E')
+    code_arr[0x24] = lambda cpu: SLA_r8(cpu, 'H')
+    code_arr[0x25] = lambda cpu: SLA_r8(cpu, 'L')
+    code_arr[0x26] = lambda cpu: SLA_r8(cpu, None, HL=True)
+    code_arr[0x27] = lambda cpu: SLA_r8(cpu, 'A')
 
+    # 0x30 - 0x3F
+    code_arr[0x30] = lambda cpu: SWAP_r8(cpu, 'B')
+    code_arr[0x31] = lambda cpu: SWAP_r8(cpu, 'C')
+    code_arr[0x32] = lambda cpu: SWAP_r8(cpu, 'D')
+    code_arr[0x33] = lambda cpu: SWAP_r8(cpu, 'E')
+    code_arr[0x34] = lambda cpu: SWAP_r8(cpu, 'H')
+    code_arr[0x35] = lambda cpu: SWAP_r8(cpu, 'L')
+    code_arr[0x36] = lambda cpu: SWAP_r8(cpu, None, HL=True)
+    code_arr[0x37] = lambda cpu: SWAP_r8(cpu, 'A')
+    code_arr[0x38] = lambda cpu: SRL_r8(cpu, 'B')
+    code_arr[0x39] = lambda cpu: SRL_r8(cpu, 'C')
+    code_arr[0x3a] = lambda cpu: SRL_r8(cpu, 'D')
+    code_arr[0x3b] = lambda cpu: SRL_r8(cpu, 'E')
+    code_arr[0x3c] = lambda cpu: SRL_r8(cpu, 'H')
+    code_arr[0x3d] = lambda cpu: SRL_r8(cpu, 'L')
+    code_arr[0x3e] = lambda cpu: SRL_r8(cpu, None, HL=True)
+    code_arr[0x3f] = lambda cpu: SRL_r8(cpu, 'A')
 
 
 

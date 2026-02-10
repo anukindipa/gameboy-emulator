@@ -42,6 +42,20 @@ def RET_cc(cpu, condition=True):
     # Set PC to the address popped from stack
     cpu.registers.PC = (msb << 8) | lsb
 
+def RETI(cpu):
+    """Return from interrupt and enable interrupts (EI)"""
+    # Pop PC from stack (same as RET)
+    lsb = cpu.read_d8(cpu.registers.SP)
+    cpu.registers.SP = (cpu.registers.SP + 1) & 0xFFFF
+    msb = cpu.read_d8(cpu.registers.SP)
+    cpu.registers.SP = (cpu.registers.SP + 1) & 0xFFFF
+    
+    # Set PC to the address popped from stack
+    cpu.registers.PC = (msb << 8) | lsb
+    
+    # Enable interrupts immediately (unlike EI which delays by 1 instruction)
+    cpu.ime = True
+
 def CALL_cc_d16(cpu, condition):
     """
     if condition is True, Push address of next instruction to stack and jump to

@@ -6,10 +6,11 @@ def NOP(cpu):
     pass
 
 def STOP(cpu):
-    pass
+    # TODO: verify behavior
+    cpu.halted = True
 
 def HALT(cpu):
-    pass
+    cpu.halted = True
 
 def CPL(cpu):
     """Complement (invert) A register"""
@@ -28,3 +29,12 @@ def SCF(cpu):
     cpu.registers.n_flag = 0
     cpu.registers.h_flag = 0
     cpu.registers.c_flag = 1
+
+def EI(cpu):
+    """Enable interrupts"""
+    cpu.ime_requested = 2
+    
+def DI(cpu):
+    """Disable interrupts"""
+    cpu.ime = False
+

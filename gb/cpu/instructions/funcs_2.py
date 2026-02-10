@@ -24,6 +24,98 @@ def RL_r8(cpu, reg, HL=False):
     cpu.registers.n_flag = 0
     cpu.registers.h_flag = 0
     cpu.registers.c_flag = bit_7
+    
+def RR_r8(cpu, reg, HL=False):
+    """
+    Rotate register right through carry (0x1F).
+    Old bit 0 goes to carry, carry goes to bit 7.
+    https://gekkio.fi/files/gb-docs/gbctr.pdf (page 84-RRA, RR r8-92)
+    """
+    val = getattr(cpu.registers, reg) if not HL else cpu.read_d8(cpu.registers.HL)
+    bit_0 = val & 0x1
+    val = (val >> 1) | ((cpu.registers.c_flag << 7) & 0x80)
+    
+    # Write result back
+    if HL:
+        cpu.write_d8(cpu.registers.HL, val)
+    else:
+        setattr(cpu.registers, reg, val)
+    
+    # Set flags
+    cpu.registers.z_flag = int(val == 0)
+    cpu.registers.n_flag = 0
+    cpu.registers.h_flag = 0
+    cpu.registers.c_flag = bit_0
+
+def SLA_r8(cpu, reg, HL=False):
+    """
+    Shifts the 8-bit register r value left by one bit using an arithmetic shift.
+    """
+    if HL:
+        val = cpu.read_d8(cpu.registers.HL)
+    else:
+        val = getattr(cpu.registers, reg)
+    
+    bit_7 = (val >> 7) & 0x1
+    val = ((val << 1) & 0xFF)
+    
+    # write back
+    if HL:
+        cpu.write_d8(cpu.registers.HL, val)
+    else:
+        setattr(cpu.registers, reg, val)
+
+    cpu.registers.z_flag = int(val == 0)
+    cpu.registers.n_flag = 0
+    cpu.registers.h_flag = 0
+    cpu.registers.c_flag = bit_7
+
+def SWAP_r8(cpu, reg, HL=False):
+    """
+    shift lower nibble to upper nibble and upper nibble to lower nibble.
+    set z flag if result is zero.
+    """
+    if HL:
+        val = cpu.read_d8(cpu.registers.HL)
+        lower_nibble = val & 0x0F
+        upper_nibble = (val >> 4) & 0x0F
+        val = (lower_nibble << 4) | upper_nibble
+        cpu.write_d8(cpu.registers.HL, val)
+    else:
+        val = getattr(cpu.registers, reg)
+        lower_nibble = val & 0x0F
+        upper_nibble = (val >> 4) & 0x0F
+        val = (lower_nibble << 4) | upper_nibble
+        setattr(cpu.registers, reg, val)
+    
+    cpu.registers.z_flag = int(val == 0)
+    cpu.registers.n_flag = 0
+    cpu.registers.h_flag = 0
+    cpu.registers.c_flag = 0
+    
+def SRL_r8(cpu, reg, HL=False):
+    """
+    Shifts the 8-bit register r value right by one bit using a logical shift.
+    """
+    if HL:
+        val = cpu.read_d8(cpu.registers.HL)
+    else:
+        val = getattr(cpu.registers, reg)
+    
+    bit_0 = val & 0x1
+    val = (val >> 1) & 0xFF
+
+    # write back
+    if HL:
+        cpu.write_d8(cpu.registers.HL, val)
+    else:
+        setattr(cpu.registers, reg, val)
+        
+    cpu.registers.z_flag = int(val == 0)
+    cpu.registers.n_flag = 0
+    cpu.registers.h_flag = 0
+    cpu.registers.c_flag = bit_0
+    
 
 def BIT_n_r8(cpu, bit, reg, HL=False):
     """

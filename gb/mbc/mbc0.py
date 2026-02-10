@@ -17,8 +17,12 @@ class MBC0():
         if address < 0x8000:
             return self._rom_data[address]
         else:
-            raise ValueError("MBC0 ERROR: cpu tried reading from 0x{:04X}".format(address))
+            # raise ValueError("MBC0 ERROR: cpu tried reading from 0x{:04X}".format(address))
+            print(f"tried to read from {address}. In MBC0 this is not possible")
+            return 0xFF
+
     
     def write_byte(self, address, value):
         # MBC0 does not support writing to ROM
+        print(f"tried writing to {address}. In MBC0 this is not possible")
         pass 
